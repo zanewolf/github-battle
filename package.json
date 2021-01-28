@@ -8,8 +8,8 @@
     "start": "webpack serve"
   },
   "babel": {
-    "presets":[
-    "@babel/preset-env",
+    "presets": [
+      "@babel/preset-env",
       "@babel/preset-react"
     ]
   },
@@ -17,8 +17,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "prop-types": "^15.7.2",
     "react": "^17.0.1",
-    "react-dom": "^17.0.1"
+    "react-dom": "^17.0.1",
+    "react-icons": "^4.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",
