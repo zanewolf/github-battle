@@ -5,6 +5,21 @@ import React from 'react'
 //it's just a component, not a function
 
 //no props are being passed to Hover, but we are passing children by wrapping jsx in the hover component
+// export default function Hover(){
+//     const [hovering, setHovering] = React.useState(false)
+//
+//     const mouseOver=()=>setHovering(true)
+//     const mouseOut=()=>setHovering(false)
+//
+//     return (
+//         <div onMouseOver={mouseOver} onMouseOut={mouseOut}>
+//             {/*this.props.children is a function that expects to receive the hovering state, as specified in the function passed to the Hover component in tooltip*/}
+//             {/*render the children with the proper hovering state. */}
+//             {this.props.children(hovering)}
+//         </div>
+//     )
+// }
+
 export default class Hover extends React.Component {
 
     state={
