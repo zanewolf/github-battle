@@ -89,82 +89,143 @@ LanguagesNav.propTypes = {
     onUpdateLanguage: PropTypes.func.isRequired
 }
 
-export default class Popular extends React.Component {
-    state = {
-        selectedLanguage: 'All',
-        //default state of menu is all
-        repos: {},
-        // start with nothing cached
-        error:null,
-    //    and no errors
-    }
-
-    componentDidMount(){
-        this.updateLanguage(this.state.selectedLanguage)
-    }
-
-    // if a language is selected, change the state of the prop
-    updateLanguage=(selectedLanguage)=>{
-        this.setState({
-            selectedLanguage,
+function popularReducer(state,action){
+    if (action.type==='success'){
+        return {
+            ...state,
+            [action.selectedLanguage]: action.repos,
             error:null
-        })
-
-        //if the repo for the selected language hasn't been grabbed, then grab it from the API
-        // if the repo entry for the selected language already exists (it's been cached) then skip
-        if (!this.state.repos[selectedLanguage]) {
-            fetchPopularRepos(selectedLanguage)
-                .then((data)=>{
-                    //save the popular repos to the repos array prop
-                    this.setState((repos)=>({
-                        repos: {
-                            // ...repos concatenates the current state of the repo array with what we're adding to it, the new repo data just for the current language
-                            ...repos,
-                            [selectedLanguage]:data
-                        }
-                    }))
-                })
-                .catch((error) => {
-                    console.warn("Error fetching repos:", error)
-
-                    //and change the state prop error to not null
-                    this.setState({
-                        error: "There was an error fetching the repositories"
-                    })
-                })
         }
+    } else if (action.type==='error'){
+        return {
+            ...state,
+            error: action.error.message
+        }
+    } else {
+        throw new Error("that action type isn't supported")
     }
-    isLoading=()=>{
-        //grab the state props
-        const {selectedLanguage, repos, error} = this.state
+}
 
-        //if there is no error and the repos array data simply doesn't exist yet, then return true
-        return !repos[selectedLanguage] && error===null
-    }
+export default function Popular(){
+    const [selectedLanguage, setSelectedLanguage] = React.useState('All')
+    const [state,dispatch] = React.useReducer(
+        popularReducer,
+        {error:null}
+    )
 
-    render(){
-        const {selectedLanguage, repos, error} = this.state
+    const isLoading = () => !state[selectedLanguage] && state.error===null
+    const fetchedLanguages = React.useRef([])
 
-        return (
+    React.useEffect(()=>{
+        if (fetchedLanguages.current.includes(selectedLanguage)===false){
+            fetchedLanguages.current.push(selectedLanguage)
+
+            fetchPopularRepos(selectedLanguage)
+                .then((repos)=> dispatch({type:'success', selectedLanguage,repos}))
+                .catch((error)=> dispatch({type: 'error', error}))
+        }
+
+    },[fetchedLanguages, selectedLanguage])
+
+    return (
         //    react.fragment adds the html to the app div without creating a redundant div element
         <React.Fragment>
             {/*load the languagesNav menu with the correct language highlighted and with the function to update which language is selected upon click */}
             <LanguagesNav
                 selected = {selectedLanguage}
-                onUpdateLanguage = {this.updateLanguage}
+                onUpdateLanguage ={(language)=>setSelectedLanguage(language)}
             />
 
             {/*if isloading returns true, then run the Loading component*/}
-            {this.isLoading()&&<Loading text={'Fetching Repos'}/>}
+            {isLoading()&&<Loading text={'Fetching Repos'}/>}
 
             {/*if error is not null, then display it*/}
-            {error && <p className='center-text error'>{error}</p>}
+            {state.error && <p className='center-text error'>{state.error}</p>}
 
             {/*if loading is not true and error is not null, then load ReposGrid component, feeding in the prop of the repo array for the selected language */}
-            {repos[selectedLanguage] && <ReposGrid repos={repos[selectedLanguage]} />}
+            {state[selectedLanguage] && <ReposGrid repos={state[selectedLanguage]} />}
 
         </React.Fragment>
-        )
+    )
 
-    }
 }
+
+// export default class Popular extends React.Component {
+//     state = {
+//         selectedLanguage: 'All',
+//         //default state of menu is all
+//         repos: {},
+//         // start with nothing cached
+//         error:null,
+//     //    and no errors
+//     }
+//
+//     componentDidMount(){
+//         this.updateLanguage(this.state.selectedLanguage)
+//     }
+//
+//     // if a language is selected, change the state of the prop
+//     updateLanguage=(selectedLanguage)=>{
+//         this.setState({
+//             selectedLanguage,
+//             error:null
+//         })
+//
+//         //if the repo for the selected language hasn't been grabbed, then grab it from the API
+//         // if the repo entry for the selected language already exists (it's been cached) then skip
+//         if (!this.state.repos[selectedLanguage]) {
+//             fetchPopularRepos(selectedLanguage)
+//                 .then((data)=>{
+//                     //save the popular repos to the repos array prop
+//                     this.setState((repos)=>({
+//                         repos: {
+//                             // ...repos concatenates the current state of the repo array with what we're adding to it, the new repo data just for the current language
+//                             ...repos,
+//                             [selectedLanguage]:data
+//                         }
+//                     }))
+//                 })
+//                 .catch((error) => {
+//                     console.warn("Error fetching repos:", error)
+//
+//                     //and change the state prop error to not null
+//                     this.setState({
+//                         error: "There was an error fetching the repositories"
+//                     })
+//                 })
+//         }
+//     }
+//     isLoading=()=>{
+//         //grab the state props
+//         const {selectedLanguage, repos, error} = this.state
+//
+//         //if there is no error and the repos array data simply doesn't exist yet, then return true
+//         return !repos[selectedLanguage] && error===null
+//     }
+//
+//     render(){
+//         const {selectedLanguage, repos, error} = this.state
+//
+//         return (
+//         //    react.fragment adds the html to the app div without creating a redundant div element
+//         <React.Fragment>
+//             {/*load the languagesNav menu with the correct language highlighted and with the function to update which language is selected upon click */}
+//             <LanguagesNav
+//                 selected = {selectedLanguage}
+//                 onUpdateLanguage = {this.updateLanguage}
+//             />
+//
+//             {/*if isloading returns true, then run the Loading component*/}
+//             {this.isLoading()&&<Loading text={'Fetching Repos'}/>}
+//
+//             {/*if error is not null, then display it*/}
+//             {error && <p className='center-text error'>{error}</p>}
+//
+//             {/*if loading is not true and error is not null, then load ReposGrid component, feeding in the prop of the repo array for the selected language */}
+//             {repos[selectedLanguage] && <ReposGrid repos={repos[selectedLanguage]} />}
+//
+//         </React.Fragment>
+//         )
+//
+//     }
+// }
